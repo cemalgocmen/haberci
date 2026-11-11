@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Telegram kanallarını tarar, kelimelerinizle eşleşen yeni paylaşımları size Telegram'dan iletir."""
+"""Telegram kanallarını tarar, kelimelerinizle eşleşen yeni paylaşımları size ve @cgindirim kanalına iletir."""
 import html, json, os, re, sys, unicodedata
 import urllib.parse, urllib.request
 
@@ -170,7 +170,6 @@ def listing():
 
 
 def remove_entry(name, arg, label):
-    """arg: numara ya da metin. Silinen satırı döndürür (yoksa None)."""
     lines = read_raw(name)
     idx = [i for i, l in enumerate(lines) if is_entry(l)]
     target = None
@@ -199,13 +198,11 @@ HELP = (
     "🤖 Komutlar\n"
     "/liste → istek ve kanalları numaralı gösterir\n"
     "/ekle fissler düdüklü → istek ekler\n"
-    "/sil 2 → 2 numaralı isteği siler (veya /sil fissler düdüklü)\n"
+    "/sil 2 → 2 numaralı isteği siler\n"
     "/degistir 2 philips airfryer → 2 numaralı isteği değiştirir\n"
     "/kanal t.me/kanaladi → kanal ekler\n"
-    "/kanalsil 1 → 1 numaralı kanalı siler (veya /kanalsil kanaladi)\n\n"
-    "İstek yazımı: satırdaki tüm kelimeler geçmeli.\n"
-    "-kelime geçmemeli, \"iki kelime\" tam ifade.\n"
-    "Not: komutlar bot her çalıştığında (yaklaşık 5-10 dk içinde) işlenir."
+    "/kanalsil 1 → 1 numaralı kanalı siler\n\n"
+    "Yakalanan indirimler doğrudan @cgindirim kanalında paylaşılır!"
 )
 
 
@@ -257,8 +254,8 @@ def handle(cmd, arg, state):
             state["last"][name] = max(p[0] for p in posts)
             note = f"✅ Eklendi: {name} (kanal okunabiliyor, bundan sonraki paylaşımlar izlenecek)"
         else:
-            note = (f"⚠️ Eklendi ama '{name}' okunamadı. Herkese açık değil ya da web önizlemesi kapalı "
-                    f"olabilir; t.me/s/{name} adresini tarayıcıda deneyin. İsterseniz /kanalsil {name} ile silin.")
+            note = (f"⚠️ Eklendi ama '{name}' okunamadı. Herkese açık bir kanal olmayabilir "
+                    f"veya Telegram grupları webden okunamıyor olabilir.")
         return note + "\n\n" + listing()
     if cmd == "kanalsil":
         if not arg:
@@ -297,7 +294,7 @@ def process_commands(token, chat, state):
     for upd in res.get("result", []):
         state["offset"] = upd["update_id"] + 1
         msg = upd.get("message") or {}
-        if str(msg.get("chat", {}).get("id")) != str(chat):   # yalnızca sizin mesajlarınız
+        if str(msg.get("chat", {}).get("id")) != str(chat):
             continue
         text = (msg.get("text") or "").strip()
         if not text:
@@ -311,21 +308,31 @@ def process_commands(token, chat, state):
             print("yanıt gönderilemedi:", e)
 
 
-
 def main():
     token, chat = os.environ.get("BOT_TOKEN", ""), os.environ.get("CHAT_ID", "")
+    target_channel = os.environ.get("TARGET_CHANNEL", "@cgindirim")
+
     if not token or not chat:
-        sys.exit("HATA: BOT_TOKEN ve CHAT_ID 'secret' olarak tanımlanmalı (README'ye bakın).")
+        sys.exit("HATA: BOT_TOKEN ve CHAT_ID 'secret' olarak tanımlanmalı.")
 
     state = load_state()
-    process_commands(token, chat, state)      # Telegram'dan gelen komutlar önce uygulanır
+    process_commands(token, chat, state)
     rules = parse_rules(read_lines("kelimeler.txt"))
     chans = list(dict.fromkeys(c for c in map(channel_name, read_lines("kanallar.txt")) if c))
-    print(f"{len(chans)} kanal, {len(rules)} istek")
+    print(f"{len(chans)} kanal, {len(rules)} istek. Hedef kanal: {target_channel}")
 
+    # Test modunda hem sana hem @cgindirim kanalına onay mesajı atar
     if os.environ.get("TEST", "").lower() == "true":
         send(token, chat, f"✅ İndirim botu çalışıyor.\nKanallar: {', '.join(chans)}\n"
                           f"İstekler: {' | '.join(r['raw'] for r in rules)}")
+        if target_channel:
+            try:
+                send(token, target_channel, f"🚀 @cgindirim kanalı başarıyla bağlandı!\n\n"
+                                            f"Takip edilen kanallar: {', '.join(chans)}\n"
+                                            f"Aranan fırsatlar: {' | '.join(r['raw'] for r in rules)}\n\n"
+                                            f"Bot 7/24 nöbette, fırsatlar yakalandıkça buraya düşecek!")
+            except Exception as e:
+                print(f"Kanala test mesajı atılamadı: {e}")
 
     for ch in chans:
         try:
@@ -338,7 +345,7 @@ def main():
             if ch not in state["last"] and ch not in state["warned"]:
                 try:
                     send(token, chat, f"⚠️ '{ch}' kanalı okunamadı. Herkese açık değil ya da web "
-                                      f"önizlemesi kapalı olabilir (t.me/s/{ch} adresini tarayıcıda deneyin).")
+                                      f"önizlemesi kapalı olabilir.")
                     state["warned"].append(ch)
                 except Exception as e:
                     print("uyarı gönderilemedi:", e)
@@ -359,7 +366,22 @@ def main():
             if not hit:
                 continue
             try:
-                send(token, chat, f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}")
+                msg = f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}"
+                
+                # 1. Doğrudan @cgindirim kanalında paylaş:
+                if target_channel:
+                    try:
+                        send(token, target_channel, msg)
+                    except Exception as ce:
+                        print(f"[{ch}] Kanala gönderilemedi ({target_channel}): {ce}")
+                
+                # 2. Özel sohbetine de yedek bildir:
+                if str(target_channel) != str(chat):
+                    try:
+                        send(token, chat, msg)
+                    except Exception as pe:
+                        print(f"[{ch}] Özel sohbete gönderilemedi: {pe}")
+
                 print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
             except Exception as e:
                 ok = False
