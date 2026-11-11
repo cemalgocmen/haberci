@@ -4,7 +4,5 @@
 # Büyük/küçük harf ve Türkçe karakterler (ş, ı, ğ...) fark etmez.
 fissler düdüklü
 stanley
-mont
-polar
 Fissler
 Lavi
