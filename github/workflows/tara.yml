@@ -1,0 +1,32 @@
+name: Telegram indirim takibi
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test mesajı gönder"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: tarama
+  cancel-in-progress: false
+jobs:
+  tara:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kanalları tara
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TEST: ${{ github.event.inputs.test }}
+        run: python3 bot.py
+      - name: Durumu kaydet
+        run: |
+          git config user.name "indirim-botu"
+          git config user.email "bot@users.noreply.github.com"
+          git add state.json kelimeler.txt kanallar.txt
+          git diff --cached --quiet || (git commit -m "durum güncellendi" && git push)
