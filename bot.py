@@ -374,13 +374,6 @@ def main():
                         send(token, target_channel, msg)
                     except Exception as ce:
                         print(f"[{ch}] Kanala gönderilemedi ({target_channel}): {ce}")
-                
-                # 2. Özel sohbetine de yedek bildir:
-                if str(target_channel) != str(chat):
-                    try:
-                        send(token, chat, msg)
-                    except Exception as pe:
-                        print(f"[{ch}] Özel sohbete gönderilemedi: {pe}")
 
                 print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
             except Exception as e:
