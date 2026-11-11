@@ -1,0 +1,4 @@
+# Takip edilecek herkese açık Telegram kanalları (her satıra bir tane).
+# "t.me/kanaladi", "https://t.me/kanaladi" veya sadece "kanaladi" yazabilirsiniz.
+t.me/indirimdeal
+t.me/indirim_kilavuzu

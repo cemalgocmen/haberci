@@ -1,0 +1,6 @@
+# Her satır bir istek. Satırdaki kelimelerin HEPSİ paylaşımda geçmeli.
+#   -kelime      : bu kelime geçmemeli (örn: fissler -lastik)
+#   "iki kelime" : tam ifade olarak aranır
+# Büyük/küçük harf ve Türkçe karakterler (ş, ı, ğ...) fark etmez.
+fissler düdüklü
+fissler vitaquick
