@@ -133,6 +133,13 @@ def parse_posts(page):
 
 
 # ---------- bildirim ----------
+REKLAM = re.compile(r"t\.me/|telegram|@\w+|katıl|abone|kanal|whatsapp", re.I)
+
+
+def temizle(text):
+    lines = [l for l in text.split("\n") if not REKLAM.search(l)]
+    out = "\n".join(lines).strip()
+    return out or text
 def send(token, chat, text):
     data = urllib.parse.urlencode({"chat_id": chat, "text": text[:4000]}).encode()
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data)
@@ -365,7 +372,7 @@ def main():
             hit = first_match(rules, text)
             if not hit:
                 continue
-            msg = f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}"
+            msg = f"🔥 {hit['raw']}\n\n{temizle(text)[:1500]}"
             try:
                 send(token, target_channel, msg)
                 print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
