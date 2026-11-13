@@ -358,25 +358,20 @@ def main():
             print(f"[{ch}] ilk tarama, {newest} numarasına kadar işaretlendi")
             continue
 
-        ok = True
+                ok = True
         for pid, text in sorted(posts):
             if pid <= last:
                 continue
             hit = first_match(rules, text)
             if not hit:
                 continue
-                          msg = f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}"
-               try:
-                   send(token, target_channel, msg)
-                   print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
-               except Exception as e:
-                   ok = False
-                   print(f"[{ch}] kanala gönderilemedi #{pid}: {e}")
-
+            msg = f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}"
+            try:
+                send(token, target_channel, msg)
                 print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
             except Exception as e:
                 ok = False
-                print(f"[{ch}] gönderilemedi #{pid}: {e}")
+                print(f"[{ch}] kanala gönderilemedi #{pid}: {e}")
         if ok:
             state["last"][ch] = max(last, newest)
 
