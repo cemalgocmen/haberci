@@ -4,6 +4,7 @@ on:
   schedule:
     # Her saatin 10. dakikasında başlar (yoğun saat kuyruğuna takılmamak için 10 seçildi)
     - cron: "10 * * * *"
+    - cron: "40 * * * *"
   workflow_dispatch:
     inputs:
       test:
@@ -16,7 +17,7 @@ permissions:
 
 concurrency:
   group: tarama
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   tara:
