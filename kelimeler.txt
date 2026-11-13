@@ -2,8 +2,6 @@
 #   -kelime      : bu kelime geçmemeli (örn: fissler -lastik)
 #   "iki kelime" : tam ifade olarak aranır
 # Büyük/küçük harf ve Türkçe karakterler (ş, ı, ğ...) fark etmez.
-stanley
-Fissler
 Lavi
 züber
 "kahve dünyası"
