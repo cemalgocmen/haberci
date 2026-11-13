@@ -365,15 +365,13 @@ def main():
             hit = first_match(rules, text)
             if not hit:
                 continue
-            try:
-                msg = f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}"
-                
-                # 1. Doğrudan @cgindirim kanalında paylaş:
-                if target_channel:
-                    try:
-                        send(token, target_channel, msg)
-                    except Exception as ce:
-                        print(f"[{ch}] Kanala gönderilemedi ({target_channel}): {ce}")
+                          msg = f"🔥 {hit['raw']}\n\n{text[:1500]}\n\n📣 https://t.me/{ch}/{pid}"
+               try:
+                   send(token, target_channel, msg)
+                   print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
+               except Exception as e:
+                   ok = False
+                   print(f"[{ch}] kanala gönderilemedi #{pid}: {e}")
 
                 print(f"[{ch}] eşleşme #{pid}: {hit['raw']}")
             except Exception as e:
