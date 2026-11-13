@@ -358,7 +358,7 @@ def main():
             print(f"[{ch}] ilk tarama, {newest} numarasına kadar işaretlendi")
             continue
 
-                ok = True
+        ok = True
         for pid, text in sorted(posts):
             if pid <= last:
                 continue
