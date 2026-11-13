@@ -1,9 +1,10 @@
 {
  "last": {
-  "indirim_kilavuzu": 3112
+  "indirim_kilavuzu": 3113,
+  "onual_firsat": 129139
  },
  "menu_set": true,
- "offset": 293149012,
+ "offset": 293149016,
  "warned": [
   "indirimdeal"
  ]
