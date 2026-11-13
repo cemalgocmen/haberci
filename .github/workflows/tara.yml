@@ -2,9 +2,7 @@ name: Telegram indirim takibi
 
 on:
   schedule:
-    # Her saatin 10. dakikasında başlar (yoğun saat kuyruğuna takılmamak için 10 seçildi)
     - cron: "10 * * * *"
-    - cron: "40 * * * *"
   workflow_dispatch:
     inputs:
       test:
@@ -22,49 +20,25 @@ concurrency:
 jobs:
   tara:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
-      - name: Python Kurulumu
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: 50 Dakikalık Akıllı Tarama Döngüsü
+      - name: Tara
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           git config user.name "indirim-botu"
           git config user.email "bot@users.noreply.github.com"
-
-          START_TIME=$(date +%s)
-          IS_TEST="${{ github.event.inputs.test }}"
-
-          echo "🚀 50 dakikalık canlı tarama döngüsü başladı..."
-
-          # Yaklaşık 50 dakika (3000 saniye) boyunca her 5 dakikada bir tara
-          while [ $(($(date +%s) - START_TIME)) -lt 3000 ]; do
-            echo "--------------------------------------------------"
-            echo "⏰ Tarama saati: $(date '+%Y-%m-%d %H:%M:%S')"
-            
-            # Eğer GitHub'dan elle kelime/kanal eklediysen önce son halini çek
+          TEST="${{ github.event.inputs.test }}" python3 bot.py
+          git add state.json kelimeler.txt kanallar.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "durum güncellendi [$(date '+%H:%M')]" || true
             git pull --rebase origin main || true
-
-            # Botu çalıştır (TEST bildirimi sadece ilk turda gider)
-            TEST="$IS_TEST" python3 bot.py
-            IS_TEST="false"
-
-            # Durum veya kelime listesi değiştiyse hemen GitHub'a kaydet
-            git add state.json kelimeler.txt kanallar.txt
-            if ! git diff --cached --quiet; then
-              echo "💾 Değişiklikler GitHub'a aktarılıyor..."
-              git commit -m "durum güncellendi [$(date '+%H:%M')]" || true
-              git push || true
-            fi
-
-            echo "⏳ 5 dakika bekleniyor..."
-            sleep 300
-          done
-
-          echo "🏁 50 dakikalık döngü bitti. Sıradaki saat görevi devralacak."
+            git push || true
+          fi
