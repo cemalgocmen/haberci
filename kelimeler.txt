@@ -14,3 +14,4 @@ Bingo
 Peros
 zeytinyağı
 peynir
+"Google Play"
