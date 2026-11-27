@@ -17,3 +17,4 @@ peynir
 "Google Play"
 omo
 çikolata
+adidas
